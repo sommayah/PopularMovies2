@@ -1,20 +1,24 @@
 package com.example.sommayahsoliman.popularmovies;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +54,7 @@ public class DetailActivityFragment extends Fragment {
     private int movie_id;
     private Intent mIntent; //will be changed to uri later
     private Extras extras; //this includes trailers and reviews
+    public LinearLayout mLayout;
 
     public DetailActivityFragment() {
         setHasOptionsMenu(false);
@@ -96,7 +101,8 @@ public class DetailActivityFragment extends Fragment {
             release_date = intent.getStringExtra("release_date");
             vote = intent.getDoubleExtra("vote", 0);
             overview = intent.getStringExtra("overview");
-            movie_id = intent.getIntExtra("movie_id",0);
+            movie_id = intent.getIntExtra("movie_id", 0);
+            mLayout = (LinearLayout)rootView.findViewById(R.id.outerLayout);
             TextView textView = (TextView)rootView.findViewById(R.id.textViewTitle);
             textView.setText(name);
             TextView dateTextView = (TextView)rootView.findViewById(R.id.textViewDate);
@@ -342,8 +348,102 @@ public class DetailActivityFragment extends Fragment {
         protected void onPostExecute(Extras extras) {
             if (extras != null) {
                 //update ui
+                addTrailers(extras);
+                addReviews(extras);
                 super.onPostExecute(extras);
             }
+        }
+    }
+
+    public void addTrailers(final Extras extra){
+        int numTrailers = extra.getTrailersNum();
+        if(numTrailers >0){
+            //add trailers title
+            TextView title = new TextView(getActivity());
+            title.setText("Trailers:");
+            title.setTextAppearance(getActivity(), android.R.style.TextAppearance_DeviceDefault_Large);
+            mLayout.addView(title);
+        }
+        for(int i=0; i<numTrailers;i++){
+            LinearLayout trailerLayout =new LinearLayout(getActivity());
+            trailerLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+            TextView trailerName = new TextView(getActivity());
+            trailerName.setText(extra.getTrailerAtIndex(i).getTitle());
+            trailerName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT);
+            params.weight = 4f;
+            trailerName.setLayoutParams(params);
+            trailerLayout.addView(trailerName);
+
+            Button btn = new Button(getActivity());
+            btn.setTag(i);
+            btn.setText("Go!");
+            LinearLayout.LayoutParams paramsBtn = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT);
+            paramsBtn.weight = 1f;
+            btn.setLayoutParams(new ViewGroup.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT));
+            btn.setOnClickListener(new Button.OnClickListener() {
+                public void onClick(View v) {
+                    String source = extra.getTrailerAtIndex((int) v.getTag()).getSource();
+                    watchYoutubeVideo(source);
+
+                }
+            });
+            trailerLayout.addView(btn);
+            mLayout.addView(trailerLayout); //add each individual trailer
+
+        }
+
+    }
+
+    public void addReviews(final Extras extra){
+        int numReviews = extra.getReviewsNum();
+        if(numReviews >0){
+            //add reviews title
+            TextView title = new TextView(getActivity());
+            title.setText("Reviews:");
+            title.setTextAppearance(getActivity(), android.R.style.TextAppearance_DeviceDefault_Large);
+            mLayout.addView(title);
+        }
+        for(int i=0; i<numReviews;i++){
+            LinearLayout reviewLayout =new LinearLayout(getActivity());
+            reviewLayout.setOrientation(LinearLayout.VERTICAL);
+
+            TextView authorName = new TextView(getActivity());
+            authorName.setText(extra.getReviewAtIndex(i).getAuthor()+":");
+            authorName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            authorName.setTextColor(Color.LTGRAY);
+            reviewLayout.addView(authorName);
+
+            TextView reviewBody = new TextView(getActivity());
+            reviewBody.setText(extra.getReviewAtIndex(i).getBody());
+           // reviewBody.setTextAppearance(getActivity(), android.R.style.TextAppearance_DeviceDefault_Medium);
+           // reviewBody.setTextColor(Color.DKGRAY);
+            reviewBody.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMargins(0,15,0,15);
+            reviewBody.setLayoutParams(params);
+
+            reviewLayout.addView(reviewBody);
+
+
+            mLayout.addView(reviewLayout); //add each individual trailer
+
+        }
+
+    }
+    public void watchYoutubeVideo(String id){
+        try{
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
+            startActivity(intent);
+        }catch (ActivityNotFoundException ex){
+            Intent intent=new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://www.youtube.com/watch?v="+id));
+            startActivity(intent);
         }
     }
 
@@ -356,4 +456,10 @@ public class DetailActivityFragment extends Fragment {
         this.trailers = trailers.clone();
         this.reviews = reviews.clone();
     }
+     public int getTrailersNum(){return trailers.length;}
+     public int getReviewsNum(){return reviews.length;}
+     public Trailer getTrailerAtIndex(int i){return trailers[i];}
+     public Review getReviewAtIndex(int i){return reviews[i];}
+
+
 }

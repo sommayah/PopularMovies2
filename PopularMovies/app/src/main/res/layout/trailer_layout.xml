@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/trailer_layout"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:gravity="center_horizontal"
+    android:layout_height="150dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Large Text"
+        android:layout_marginRight="70dp"
+        android:id="@+id/trailerNameTextView" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Button"
+        android:id="@+id/startTrailerButton"
+        android:layout_gravity="right"
+        android:onClick="playTrailer"/>
+</LinearLayout>
