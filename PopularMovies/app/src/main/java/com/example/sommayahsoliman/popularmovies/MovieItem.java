@@ -13,8 +13,8 @@ public class MovieItem implements Parcelable{
     private final String overView;
     private final double vote;
     private final int id;
-    private String[] trailers = new String[0];
-    private String[] reviews = new String[0];
+    private Extras extra; //trailers and reviews
+    private boolean favorite;
 
     MovieItem(int id,String name, String path, String releaseDate, double vote, String overView){
         this.id = id;
@@ -23,8 +23,23 @@ public class MovieItem implements Parcelable{
         this.releaseDate = releaseDate;
         this.vote = vote;
         this.overView = overView;
+        this.favorite = false;
 
     }
+
+    MovieItem(int id,String name, String path, String releaseDate, double vote, String overView,boolean favorite,Extras extra){
+        this.id = id;
+        this.name = name;
+        this.path = path;
+        this.releaseDate = releaseDate;
+        this.vote = vote;
+        this.overView = overView;
+        this.favorite = favorite;
+        this.extra = extra;
+
+    }
+
+
 
 
 
@@ -35,8 +50,7 @@ public class MovieItem implements Parcelable{
         releaseDate = in.readString();
         vote = in.readDouble();
         overView=in.readString();
-        in.readStringArray(trailers);
-        in.readStringArray(reviews);
+        extra = in.readParcelable(Extras.class.getClassLoader());
 
     }
 
@@ -53,8 +67,7 @@ public class MovieItem implements Parcelable{
         dest.writeString(releaseDate);
         dest.writeDouble(vote);
         dest.writeString(overView);
-        dest.writeStringArray(trailers);
-        dest.writeStringArray(reviews);
+        dest.writeParcelable(extra,0);
 
 
     }
@@ -71,9 +84,12 @@ public class MovieItem implements Parcelable{
 
     };
 
-    public void setTrailers(String[] trailers){
-        this.trailers = trailers.clone();
+    public void setExtras(Extras extra){
+        this.extra = extra;
 
+    }
+    public void setFavorite(boolean favorite){
+        this.favorite = favorite;
     }
 
     public String getName(){return name;}
@@ -88,6 +104,6 @@ public class MovieItem implements Parcelable{
         return releaseDate;
     }
     public int getId(){return id;}
-    public String[] getTrailers(){return trailers.clone();}
-    public String[] getReviews(){return reviews.clone();}
+    public Extras getExtra(){return extra;}
+    public boolean getFavorite(){return favorite;}
 }

@@ -34,6 +34,7 @@ import java.util.Set;
  */
 public class MainActivityFragment extends Fragment {
     ArrayList<MovieItem> movieItems;
+    ArrayList<Extras> extrasArray;
     ImageAdapter adapter;
     SharedPreferences.OnSharedPreferenceChangeListener listener;
     Set<String> favoriteMovies;
@@ -176,6 +177,8 @@ public class MainActivityFragment extends Fragment {
         detailIntent.putExtra("release_date", movieItem.getReleaseDate());
         detailIntent.putExtra("vote", movieItem.getVote());
         detailIntent.putExtra("overview", movieItem.getOverView());
+        detailIntent.putExtra("extra",movieItem.getExtra());
+        detailIntent.putExtra("favorite",movieItem.getFavorite());
         return detailIntent;
     }
 
@@ -229,7 +232,9 @@ public class MainActivityFragment extends Fragment {
                 resultTitles[i] = movie_title;
                 resultPaths[i] = movie_path;
 
-                movieItems.add(new MovieItem(movie_id,movie_title,movie_path,movie_date,movie_vote,movie_overview));
+                MovieItem movieItem = new MovieItem(movie_id,movie_title,movie_path,movie_date,movie_vote,movie_overview);
+                movieItem.setFavorite(isFavorite(String.valueOf(movie_id)));
+                movieItems.add(movieItem);
             }
 
 
@@ -339,6 +344,7 @@ public class MainActivityFragment extends Fragment {
                 adapter.clear();
                 adapter.add(movieList);
                 adapter.notifyDataSetChanged();
+                getExtrasInBackground();
                 UpdateUiAfterLoading();
                 super.onPostExecute(movieList);
             }
@@ -391,20 +397,20 @@ public class MainActivityFragment extends Fragment {
                 movie_vote = movieJson.getDouble(MOVIE_VOTE);
                 movie_date = movieJson.getString(MOVIE_RELEASE_DATE);
 
-            MovieItem movie = new MovieItem(movie_id,movie_title,movie_path,movie_date,movie_vote,movie_overview);
-
-
             for(int i=0; i<movieYoutubeTrailers.length();i++){
                 JSONObject trailer = movieYoutubeTrailers.getJSONObject(i);
                 trailers[i] = new Trailer(trailer.getString("name"),trailer.getString("source"));
-                Log.v(LOG_TAG,i+":"+trailers[i].getSource());
+               // Log.v(LOG_TAG,i+":"+trailers[i].getSource());
             }
             for(int i=0; i<moviesReviewsArray.length();i++){
                 JSONObject review = moviesReviewsArray.getJSONObject(i);
                 reviews[i] = new Review(review.getString("author"),review.getString("content"));
-                Log.v(LOG_TAG,i+":"+reviews[i].getBody());
+              //  Log.v(LOG_TAG,i+":"+reviews[i].getBody());
             }
 
+            Extras extras = new Extras(trailers,reviews);
+
+            MovieItem movie = new MovieItem(movie_id,movie_title,movie_path,movie_date,movie_vote,movie_overview,true,extras);
 
             return movie;
 
@@ -508,11 +514,189 @@ public class MainActivityFragment extends Fragment {
                     adapter.add(movieItems);
                     adapter.notifyDataSetChanged();
                     UpdateUiAfterLoading();
+
                 }
                 super.onPostExecute(movie);
             }
         }
 
+    }
+
+    private void getExtrasInBackground() {
+        extrasArray = new ArrayList<>();
+        //do it for each movie in the movielist
+        for(int i=0; i<movieItems.size();i++){
+            if(OnlineUtils.isOnline(getActivity()) == false){
+                Toast.makeText(getActivity(), "no internet connection",
+                        Toast.LENGTH_SHORT).show();
+            }else {
+                new FetchExtrasTask().execute(String.valueOf(movieItems.get(i).getId()));
+
+            }
+        }
+
+
+    }
+
+    public class FetchExtrasTask extends AsyncTask<String, Void, Extras> {
+
+        private final String LOG_TAG = FetchExtrasTask.class.getSimpleName();
+
+
+
+        private Extras getExtraDataFromJson(String movieJsonStr)
+                throws JSONException {
+
+            // These are the names of the JSON objects that need to be extracted.
+            final String MOVIE_ID = "id";
+            final String MOVIE_TRAILER = "trailers";
+            final String MOVIE_REVIEWS = "reviews";
+            final String YOU_TUBE = "youtube";
+            final String REVIEW_RESULTS = "results";
+
+
+
+            JSONObject movieJson = new JSONObject(movieJsonStr);
+            JSONObject movieTrailers = movieJson.getJSONObject(MOVIE_TRAILER);
+            JSONArray movieYoutubeTrailers = movieTrailers.getJSONArray(YOU_TUBE);
+            JSONObject movieReviews = movieJson.getJSONObject(MOVIE_REVIEWS);
+            JSONArray moviesReviewsArray = movieReviews.getJSONArray(REVIEW_RESULTS);
+            //movie title and movie poster path FOR LOG PURPOSES ONLY
+            Trailer[] trailers = new Trailer[movieYoutubeTrailers.length()];
+            Review[] reviews = new Review[moviesReviewsArray.length()];
+
+            for(int i=0; i<movieYoutubeTrailers.length();i++){
+                JSONObject trailer = movieYoutubeTrailers.getJSONObject(i);
+                trailers[i] = new Trailer(trailer.getString("name"),trailer.getString("source"));
+             //   Log.v(LOG_TAG,i+":"+trailers[i].getSource());
+            }
+            for(int i=0; i<moviesReviewsArray.length();i++){
+                JSONObject review = moviesReviewsArray.getJSONObject(i);
+                reviews[i] = new Review(review.getString("author"),review.getString("content"));
+             //   Log.v(LOG_TAG,i+":"+reviews[i].getBody());
+            }
+
+            Extras extras = new Extras(trailers,reviews);
+
+            return extras;
+
+        }
+
+        @Override
+        protected Extras doInBackground(String... params) {
+
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+
+            // Will contain the raw JSON response as a string.
+            String movieJsonStr = null;
+
+            String format = "json";
+            String api = ApiKey.API_KEY;
+            String trailerandreviews = "trailers,reviews";
+
+
+            try {
+
+                // Construct the URL for the Movie query
+
+                // themoviedb.org
+
+
+                final String MOVIE_BASE_URL = "http://api.themoviedb.org/3/movie/"+ params[0] +"?";
+                final String API_PARAM = "api_key";
+                final String APPEND_PARAM = "append_to_response";
+                //URL url = new URL("http://api.themoviedb.org/3/movie/id?&api_key=[YOUR API KEY]");
+                Uri builtUri = Uri.parse(MOVIE_BASE_URL).buildUpon()
+                        .appendQueryParameter(API_PARAM, api)
+                        .appendQueryParameter(APPEND_PARAM,trailerandreviews)
+                        .build();
+
+                URL url = new URL(builtUri.toString());
+                Log.v(LOG_TAG,"Built uri "+ builtUri.toString());
+
+                // Create the request to themoviedb, and open the connection
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+                // Read the input stream into a String
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+                if (inputStream == null) {
+                    // Nothing to do.
+                    return null;
+                }
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                    // But it does make debugging a *lot* easier if you print out the completed
+                    // buffer for debugging.
+                    buffer.append(line + "\n");
+                }
+
+                if (buffer.length() == 0) {
+                    // Stream was empty.  No point in parsing.
+                    return null;
+                }
+                movieJsonStr = buffer.toString();
+
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Error ", e);
+                // If the code didn't successfully get the weather data, there's no point in attemping
+                // to parse it.
+                return null;
+
+            } finally{
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        Log.e(LOG_TAG, "Error closing stream", e);
+                    }
+                }
+            }
+
+            try {
+                Log.v(LOG_TAG,movieJsonStr);
+                return getExtraDataFromJson(movieJsonStr);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Extras extras) {
+            if (extras != null) {
+                //update extras array
+                extrasArray.add(extras);
+                if(extrasArray.size() == movieItems.size()) { //finished loading all extras
+                    addExtrasToMovieItems(extrasArray);
+                    UpdateUiAfterLoading();
+
+                }
+                super.onPostExecute(extras);
+            }
+        }
+    }
+    void addExtrasToMovieItems(ArrayList<Extras> extras){
+        for(int i=0; i<extras.size();i++){
+            movieItems.get(i).setExtras(extras.get(i));
+        }
+    }
+
+    public boolean isFavorite(String movie_id){
+        if(favoriteMovies.contains(movie_id))
+            return true;
+        else
+            return false;
     }
 
 
