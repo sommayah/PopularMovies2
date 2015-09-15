@@ -81,6 +81,21 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
            //         .setData(dateUri);
             startActivity(intent);
         }
-
     }
+
+    @Override
+    public void onFinishLoading(Intent intent) {
+        if (mTwoPane == true) {
+            Bundle args = new Bundle();
+            //  args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
+            args.putParcelable(DetailActivityFragment.DETAIL_INTENT, intent);
+            DetailActivityFragment detailFragment =(DetailActivityFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+            if ( null != detailFragment ) {
+                detailFragment.updateUI(intent);
+            }
+
+        }
+    }
+
+
 }

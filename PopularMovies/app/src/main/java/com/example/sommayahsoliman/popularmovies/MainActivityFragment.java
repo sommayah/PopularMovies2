@@ -37,6 +37,9 @@ public class MainActivityFragment extends Fragment {
     ImageAdapter adapter;
     SharedPreferences.OnSharedPreferenceChangeListener listener;
     Set<String> favoriteMovies;
+    private int mPosition = GridView.INVALID_POSITION;
+    private static final String SELECTED_KEY = "selected_position";
+    private GridView mGridView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,6 +68,8 @@ public class MainActivityFragment extends Fragment {
     }
 
 
+
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -80,6 +85,9 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("movies", movieItems);
+        if (mPosition != GridView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, mPosition);
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -117,6 +125,16 @@ public class MainActivityFragment extends Fragment {
 
     }
 
+    public void UpdateUiAfterLoading(){
+        Intent intent = updateDetailIntent(0);
+        ((Callback) getActivity()).onFinishLoading(intent);
+        if (mPosition != GridView.INVALID_POSITION) {
+            // If we don't need to restart the loader, and there's a desired position to restore
+            // to, do so now.
+            mGridView.smoothScrollToPosition(mPosition);
+        }
+    }
+
 
 
 
@@ -124,33 +142,41 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        GridView gridview = (GridView) rootView.findViewById(R.id.gridView_movies);
+        mGridView = (GridView) rootView.findViewById(R.id.gridView_movies);
         adapter = new ImageAdapter(getActivity());
         if(movieItems !=null){
             adapter.add(movieItems);
         }
-        gridview.setAdapter(adapter);
+        mGridView.setAdapter(adapter);
 
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
                 // Toast.makeText(getActivity(), "" + adapter.getItem(position).name,
                 //         Toast.LENGTH_SHORT).show();
-                Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
-                MovieItem movieItem = adapter.getItem(position);
-                detailIntent.putExtra("movie_id", movieItem.getId());
-                detailIntent.putExtra("title", movieItem.getName());
-                detailIntent.putExtra("path", movieItem.getPath());
-                detailIntent.putExtra("release_date", movieItem.getReleaseDate());
-                detailIntent.putExtra("vote", movieItem.getVote());
-                detailIntent.putExtra("overview", movieItem.getOverView());
-                //startActivity(detailIntent);
+                Intent detailIntent = updateDetailIntent(position);
                 ((Callback) getActivity()).onItemSelected(detailIntent);
+                mPosition = position;
             }
         });
 
 
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            mPosition = savedInstanceState.getInt(SELECTED_KEY);
+        }
         return rootView;
+    }
+
+    Intent updateDetailIntent(int position){
+        Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+        MovieItem movieItem = adapter.getItem(position);
+        detailIntent.putExtra("movie_id", movieItem.getId());
+        detailIntent.putExtra("title", movieItem.getName());
+        detailIntent.putExtra("path", movieItem.getPath());
+        detailIntent.putExtra("release_date", movieItem.getReleaseDate());
+        detailIntent.putExtra("vote", movieItem.getVote());
+        detailIntent.putExtra("overview", movieItem.getOverView());
+        return detailIntent;
     }
 
 
@@ -313,6 +339,7 @@ public class MainActivityFragment extends Fragment {
                 adapter.clear();
                 adapter.add(movieList);
                 adapter.notifyDataSetChanged();
+                UpdateUiAfterLoading();
                 super.onPostExecute(movieList);
             }
         }
@@ -364,7 +391,6 @@ public class MainActivityFragment extends Fragment {
                 movie_vote = movieJson.getDouble(MOVIE_VOTE);
                 movie_date = movieJson.getString(MOVIE_RELEASE_DATE);
 
-                //movieItems.add(new MovieItem(movie_id,movie_title,movie_path,movie_date,movie_vote,movie_overview));
             MovieItem movie = new MovieItem(movie_id,movie_title,movie_path,movie_date,movie_vote,movie_overview);
 
 
@@ -481,17 +507,22 @@ public class MainActivityFragment extends Fragment {
                     adapter.clear();
                     adapter.add(movieItems);
                     adapter.notifyDataSetChanged();
+                    UpdateUiAfterLoading();
                 }
                 super.onPostExecute(movie);
             }
         }
+
     }
+
+
 
     public interface Callback {
         /**
          * DetailFragmentCallback for when an item has been selected.
          */
-        public void onItemSelected(/*Uri dateUri*/Intent intent);
+        void onItemSelected(/*Uri dateUri*/Intent intent);
+        void onFinishLoading(Intent intent);
     }
 
 }

@@ -56,6 +56,12 @@ public class DetailActivityFragment extends Fragment {
     private Extras extras; //this includes trailers and reviews
     public LinearLayout mLayout;
 
+    TextView mTextView;
+    TextView mDateTextView;
+    TextView mVoteTextView;
+    TextView mOverviewTextView;
+    ImageView mImageView;
+    Button mFavorite_btn;
     public DetailActivityFragment() {
         setHasOptionsMenu(false);
     }
@@ -75,12 +81,19 @@ public class DetailActivityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mIntent = new Intent();
+        if(savedInstanceState != null && savedInstanceState.containsKey("extras")) {
+            extras = savedInstanceState.getParcelable("extras");
+            mIntent = savedInstanceState.getParcelable(DETAIL_INTENT);
+        }
 
 
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelable("extras",extras);
+        outState.putParcelable(DETAIL_INTENT,mIntent);
         super.onSaveInstanceState(outState);
 
     }
@@ -90,11 +103,28 @@ public class DetailActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         Bundle arguments = getArguments();
-        Intent intent = new Intent();
         if(arguments != null){
-            intent = arguments.getParcelable(DetailActivityFragment.DETAIL_INTENT);
+            mIntent = arguments.getParcelable(DetailActivityFragment.DETAIL_INTENT);
         }
+        mLayout = (LinearLayout)rootView.findViewById(R.id.outerLayout);
+        mTextView = (TextView)rootView.findViewById(R.id.textViewTitle);
+        mDateTextView = (TextView)rootView.findViewById(R.id.textViewDate);
+        mVoteTextView = (TextView)rootView.findViewById(R.id.textViewVote);
+        mOverviewTextView = (TextView)rootView.findViewById(R.id.textViewOverView);
+        mImageView = (ImageView)rootView.findViewById(R.id.imageView);
+        mFavorite_btn = (Button) rootView.findViewById(R.id.favorite_btn);
+        mFavorite_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onFavoriteClick();
+            }
+        });
 
+        updateUI(mIntent);
+        return rootView;
+    }
+
+    void updateUI(Intent intent){
         if(intent != null && intent.hasExtra("title")){
             name = intent.getStringExtra("title");
             path = intent.getStringExtra("path");
@@ -102,43 +132,33 @@ public class DetailActivityFragment extends Fragment {
             vote = intent.getDoubleExtra("vote", 0);
             overview = intent.getStringExtra("overview");
             movie_id = intent.getIntExtra("movie_id", 0);
-            mLayout = (LinearLayout)rootView.findViewById(R.id.outerLayout);
-            TextView textView = (TextView)rootView.findViewById(R.id.textViewTitle);
-            textView.setText(name);
-            TextView dateTextView = (TextView)rootView.findViewById(R.id.textViewDate);
-            dateTextView.setText(RELEASE_DATE+release_date);
-            TextView voteTextView = (TextView)rootView.findViewById(R.id.textViewVote);
-            voteTextView.setText(VOTE + String.valueOf(vote));
-            TextView overviewTextView = (TextView)rootView.findViewById(R.id.textViewOverView);
-            overviewTextView.setText(overview);
-            ImageView imageView = (ImageView)rootView.findViewById(R.id.imageView);
-            Button favorite_btn = (Button) rootView.findViewById(R.id.favorite_btn);
-            favorite_btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onFavoriteClick();
-                }
-            });
+            mTextView.setText(name);
+            mDateTextView.setText(RELEASE_DATE+release_date);
+            mVoteTextView.setText(VOTE + String.valueOf(vote));
+            mOverviewTextView.setText(overview);
             if(OnlineUtils.isOnline(getActivity()) == false){
                 Toast.makeText(getActivity(), "no internet connection",
                         Toast.LENGTH_SHORT).show();
             }else {
-                new DownloadImageTask(imageView)
+                new DownloadImageTask(mImageView)
                         .execute(BASE_URL + IMAGE_SIZE + path);
             }
 
-            if(OnlineUtils.isOnline(getActivity()) == false){
-                Toast.makeText(getActivity(), "no internet connection",
-                        Toast.LENGTH_SHORT).show();
-            }else {
-                new FetchExtrasTask().execute();
+            if(extras ==null) { //fetch it if it is not saved from before
+                if (OnlineUtils.isOnline(getActivity()) == false) {
+                    Toast.makeText(getActivity(), "no internet connection",
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    new FetchExtrasTask().execute();
 
+                }
+            }else{
+                addTrailers(extras);
+                addReviews(extras);
             }
 
-
-
         }
-        return rootView;
+        mIntent = intent;
     }
 
     private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
