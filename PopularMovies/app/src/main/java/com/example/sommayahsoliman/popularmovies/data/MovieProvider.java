@@ -3,6 +3,7 @@ package com.example.sommayahsoliman.popularmovies.data;
 import android.annotation.TargetApi;
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -118,7 +119,7 @@ public class MovieProvider extends ContentProvider {
 
         // 2) Use the addURI function to match each of the types.  Use the constants from
         // WeatherContract to help define the types to the UriMatcher.
-        uriMatcher.addURI(authority,MovieContract.PATH_MOVIE, MOVIE);
+        uriMatcher.addURI(authority,MovieContract.PATH_MOVIE , MOVIE);
         uriMatcher.addURI(authority,MovieContract.PATH_TRAILER + "/*", TRAILER_FOR_MOVIE);
         uriMatcher.addURI(authority,MovieContract.PATH_REVIEW + "/*", REVIEW_FOR_MOVIE);
         uriMatcher.addURI(authority,MovieContract.PATH_TRAILER , TRAILER);
@@ -130,21 +131,19 @@ public class MovieProvider extends ContentProvider {
         return uriMatcher;
     }
 
-    /*
-        Students: We've coded this for you.  We just create a new WeatherDbHelper for later use
-        here.
-     */
+
     @Override
     public boolean onCreate() {
         mOpenHelper = new MovieDbHelper(getContext());
         return true;
     }
 
-    /*
-        Students: Here's where you'll code the getType function that uses the UriMatcher.  You can
-        test this by uncommenting testGetType in TestProvider.
+    public void clearDatabase(Context context) { //used because I edited one of the columns after creating db
 
-     */
+        SQLiteDatabase database = mOpenHelper.getWritableDatabase();
+    }
+
+
     @Override
     public String getType(Uri uri) {
 
@@ -208,9 +207,7 @@ public class MovieProvider extends ContentProvider {
         return retCursor;
     }
 
-    /*
-        Student: Add the ability to insert Locations to the implementation of this function.
-     */
+
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
@@ -255,8 +252,6 @@ public class MovieProvider extends ContentProvider {
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         // Student: Start by getting a writable database
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-        // Student: Use the uriMatcher to match the WEATHER and LOCATION URI's we are going to
-        // handle.  If it doesn't match these, throw an UnsupportedOperationException.
         final int match = sUriMatcher.match(uri);
         int rowsDeleted = 0;
         if(null == selection) selection = "1";

@@ -13,27 +13,30 @@ public class MovieItem implements Parcelable{
     private final String overView;
     private final double vote;
     private final int id;
+    private final double popularity;
     private Extras extra; //trailers and reviews
     private boolean favorite;
 
-    MovieItem(int id,String name, String path, String releaseDate, double vote, String overView){
+    MovieItem(int id,String name, String path, String releaseDate, double vote, String overView, double popularity){
         this.id = id;
         this.name = name;
         this.path = path;
         this.releaseDate = releaseDate;
         this.vote = vote;
         this.overView = overView;
+        this.popularity = popularity;
         this.favorite = false;
 
     }
 
-    MovieItem(int id,String name, String path, String releaseDate, double vote, String overView,boolean favorite,Extras extra){
+    MovieItem(int id,String name, String path, String releaseDate, double vote, String overView,double popularity, boolean favorite,Extras extra){
         this.id = id;
         this.name = name;
         this.path = path;
         this.releaseDate = releaseDate;
         this.vote = vote;
         this.overView = overView;
+        this.popularity = popularity;
         this.favorite = favorite;
         this.extra = extra;
 
@@ -50,6 +53,7 @@ public class MovieItem implements Parcelable{
         releaseDate = in.readString();
         vote = in.readDouble();
         overView=in.readString();
+        popularity=in.readDouble();
         extra = in.readParcelable(Extras.class.getClassLoader());
 
     }
@@ -67,6 +71,7 @@ public class MovieItem implements Parcelable{
         dest.writeString(releaseDate);
         dest.writeDouble(vote);
         dest.writeString(overView);
+        dest.writeDouble(popularity);
         dest.writeParcelable(extra,0);
 
 
@@ -106,4 +111,5 @@ public class MovieItem implements Parcelable{
     public int getId(){return id;}
     public Extras getExtra(){return extra;}
     public boolean getFavorite(){return favorite;}
+    public double getPopularity(){return popularity;}
 }

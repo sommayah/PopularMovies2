@@ -1,11 +1,16 @@
 package com.example.sommayahsoliman.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.sommayahsoliman.popularmovies.data.MovieContract;
+import com.example.sommayahsoliman.popularmovies.data.MovieDbHelper;
 
 
 public class MainActivity extends AppCompatActivity implements MainActivityFragment.Callback {
@@ -65,11 +70,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
 
 
     @Override
-    public void onItemSelected(/*Uri dateUri*/Intent intent) {
+    public void onItemSelected(Uri dateUri) {
         if (mTwoPane == true) {
             Bundle args = new Bundle();
-          //  args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
-            args.putParcelable(DetailActivityFragment.DETAIL_INTENT,intent);
+            args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
             DetailActivityFragment detailFragment = new DetailActivityFragment();
             detailFragment.setArguments(args);
             getSupportFragmentManager().beginTransaction()
@@ -77,8 +81,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
                     .commit();
 
         } else {
-          //  Intent intent = new Intent(this, DetailActivity.class)
-           //         .setData(dateUri);
+            Intent intent = new Intent(this, DetailActivity.class)
+                    .setData(dateUri);
             startActivity(intent);
         }
     }

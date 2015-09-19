@@ -3,6 +3,7 @@ package com.example.sommayahsoliman.popularmovies;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -11,6 +12,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -22,6 +26,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.sommayahsoliman.popularmovies.data.MovieContract;
+
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,20 +35,19 @@ import java.util.Set;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DetailActivityFragment extends Fragment {
+public class DetailActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private final String IMAGE_SIZE = "w342";
     private final String RELEASE_DATE = "Release Date: ";
     private final String VOTE = "Vote: ";
     private final String BASE_URL = "http://image.tmdb.org/t/p/";
     static final String DETAIL_INTENT = "detail_movie";
-    static final String DETAIL_URI = "Uri";
     private String name;
     private String path;
     private String release_date;
     private double vote;
     private String overview;
-    private int movie_id;
+    private String movie_id;
     private Intent mIntent; //will be changed to uri later
     private Extras extras; //this includes trailers and reviews
     public LinearLayout mLayout;
@@ -54,6 +59,50 @@ public class DetailActivityFragment extends Fragment {
     TextView mOverviewTextView;
     ImageView mImageView;
     Button mFavorite_btn;
+    private Uri mUri;
+    private MovieItem mMovieItem;
+
+    static final String DETAIL_URI = "URI";
+
+    private static final int DETAIL_LOADER = 0;
+    private static final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
+    private static final String[] DETAIL_COLUMNS = {
+            // In this case the id needs to be fully qualified with a table name, since
+            // the content provider joins the location & weather tables in the background
+            // (both have an _id column)
+            // On the one hand, that's annoying.  On the other, you can search the weather table
+            // using the location set by the user, which is only in the Location table.
+            // So the convenience is worth it.
+            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
+            MovieContract.MovieEntry.COLUMN_MOVIE_KEY,
+            MovieContract.MovieEntry.COLUMN_NAME,
+            MovieContract.MovieEntry.COLUMN_IMAGE_PATH,
+            MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
+            MovieContract.MovieEntry.COLUMN_OVERVIEW,
+            MovieContract.MovieEntry.COLUMN_VOTE,
+            MovieContract.MovieEntry.COLUMN_POPULARITY,
+            MovieContract.MovieEntry.COLUMN_FAVORITE,
+//            MovieContract.TrailerEntry.COLUMN_TRAILER_NAME,
+//            MovieContract.TrailerEntry.COLUMN_TRAILER_SOURCE,
+//            MovieContract.ReviewEntry.COLUMN_REVIEW_AUTHOR,
+//            MovieContract.ReviewEntry.COLUMN_REVIEW_BODY
+
+    };
+
+    // These indices are tied to MOVIE_COLUMNS.  If MOVIE_COLUMNS changes, these
+    // must change.
+    static final int COL_MOVIE_KEY = 0;
+    static final int COL_MOVIE_NAME = 1;
+    static final int COL_MOVIE_IMAGE_PATH = 2;
+    static final int COL_MOVIE_RELEASE_DATE = 3;
+    static final int COL_MOVIE_OVERVIEW = 4;
+    static final int COL_MOVIE_VOTE = 5;
+    static final int COL_MOVIE_POPULARITY = 6;
+    static final int COL_MOVIE_FAVORITE = 7;
+//    static final int COL_TRAILER_NAME = 8;
+//    static final int COL_TRAILER_SOURCE = 9;
+//    static final int COL_REVIEW_AUTHOR = 10;
+//    static final int COL_REVIEW_BODY = 11;
     public DetailActivityFragment() {
         setHasOptionsMenu(false);
     }
@@ -110,8 +159,14 @@ public class DetailActivityFragment extends Fragment {
             }
         });
 
-        updateUI(mIntent);
+       // updateUI(mIntent);
         return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
     }
 
     void updateUI(Intent intent){
@@ -121,7 +176,7 @@ public class DetailActivityFragment extends Fragment {
             release_date = intent.getStringExtra("release_date");
             vote = intent.getDoubleExtra("vote", 0);
             overview = intent.getStringExtra("overview");
-            movie_id = intent.getIntExtra("movie_id", 0);
+            //movie_id = intent.getIntExtra("movie_id", 0);
             extras = intent.getParcelableExtra("extra");
             favorite = intent.getBooleanExtra("favorite", false);
             mTextView.setText(name);
@@ -157,6 +212,63 @@ public class DetailActivityFragment extends Fragment {
 
         }
         mIntent = intent;
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.v(LOG_TAG, "In onCreateLoader");
+
+        if (null != mUri) {
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    mUri,
+                    DETAIL_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data != null && data.moveToFirst()) {
+            // Read weather condition ID from cursor
+            movie_id = data.getString(COL_MOVIE_KEY);
+            name = data.getString(COL_MOVIE_NAME);
+            path = data.getString(COL_MOVIE_IMAGE_PATH);
+            release_date = data.getString(COL_MOVIE_RELEASE_DATE);
+            vote = data.getDouble(COL_MOVIE_VOTE);
+            overview = data.getString(COL_MOVIE_OVERVIEW);
+            favorite = data.getInt(COL_MOVIE_FAVORITE)>0;
+            mTextView.setText(name);
+            mDateTextView.setText(RELEASE_DATE+release_date);
+            mVoteTextView.setText(VOTE + String.valueOf(vote));
+            mOverviewTextView.setText(overview);
+            // Use placeholder Image
+            if(favorite == true){
+                mFavorite_btn.setBackgroundResource(R.drawable.abc_btn_rating_star_on_mtrl_alpha);
+            }else{
+                mFavorite_btn.setBackgroundResource(R.drawable.abc_btn_rating_star_off_mtrl_alpha);
+            }
+
+            if(OnlineUtils.isOnline(getActivity()) == false){
+                Toast.makeText(getActivity(), "no internet connection",
+                        Toast.LENGTH_SHORT).show();
+            }else {
+                new DownloadImageTask(mImageView)
+                        .execute(BASE_URL + IMAGE_SIZE + path);
+            }
+
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
     }
 
     private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {

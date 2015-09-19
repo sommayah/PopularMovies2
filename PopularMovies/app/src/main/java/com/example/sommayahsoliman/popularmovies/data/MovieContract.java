@@ -91,6 +91,7 @@ public class MovieContract {
         public static final String COLUMN_RELEASE_DATE = "release_date";
         public static final String COLUMN_OVERVIEW = "overview";
         public static final String COLUMN_VOTE = "vote";
+        public static final String COLUMN_POPULARITY = "popularity";
         //boolean to determine if it is a favorite or not
         public static final String COLUMN_FAVORITE = "favorite";
 
@@ -106,6 +107,10 @@ public class MovieContract {
 
         public static Uri buildMovieUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static Uri buildMovieWithIdUri(String movie_id){
+            return CONTENT_URI.buildUpon().appendPath(movie_id).build();
         }
 
 

@@ -35,6 +35,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="MainActivity" />
         </activity>
+        <provider
+            android:authorities="com.example.sommayahsoliman.popularmovies.app"
+            android:name=".data.MovieProvider"></provider>
     </application>
 
 </manifest>
