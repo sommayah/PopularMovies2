@@ -62,14 +62,14 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     // These indices are tied to MOVIE_COLUMNS.  If MOVIE_COLUMNS changes, these
     // must change.
-    static final int COL_MOVIE_KEY = 0;
-    static final int COL_MOVIE_NAME = 1;
-    static final int COL_MOVIE_IMAGE_PATH = 2;
-    static final int COL_MOVIE_RELEASE_DATE = 3;
-    static final int COL_MOVIE_OVERVIEW = 4;
-    static final int COL_MOVIE_VOTE = 5;
-    static final int COL_MOVIE_POPULARITY = 6;
-    static final int COL_MOVIE_FAVORITE = 7;
+    static final int COL_MOVIE_KEY = 1;
+    static final int COL_MOVIE_NAME = 2;
+    static final int COL_MOVIE_IMAGE_PATH = 3;
+    static final int COL_MOVIE_RELEASE_DATE = 4;
+    static final int COL_MOVIE_OVERVIEW = 5;
+    static final int COL_MOVIE_VOTE = 6;
+    static final int COL_MOVIE_POPULARITY = 7;
+    static final int COL_MOVIE_FAVORITE = 8;
 
 
     @Override
@@ -165,7 +165,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     }
 
-    public void UpdateUiAfterLoading(){
+ /*   public void UpdateUiAfterLoading(){
         Intent intent = updateDetailIntent(0);
         ((Callback) getActivity()).onFinishLoading(intent);
         if (mPosition != GridView.INVALID_POSITION) {
@@ -173,7 +173,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             mGridView.smoothScrollToPosition(mPosition);
         }
     }
-
+*/
 
 
 
@@ -218,7 +218,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         return rootView;
     }
 
-    Intent updateDetailIntent(int position){
+  /*  Intent updateDetailIntent(int position){
         Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
         MovieItem movieItem = adapter.getItem(position);
         detailIntent.putExtra("movie_id", movieItem.getId());
@@ -231,7 +231,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         detailIntent.putExtra("extra",movieItem.getExtra());
         detailIntent.putExtra("favorite",movieItem.getFavorite());
         return detailIntent;
-    }
+    }*/
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {

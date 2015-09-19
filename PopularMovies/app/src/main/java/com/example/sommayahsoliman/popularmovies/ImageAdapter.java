@@ -9,9 +9,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by sommayahsoliman on 8/8/15.
  */
@@ -20,20 +17,10 @@ public class ImageAdapter extends CursorAdapter {
         super(context, c, flags);
     }
 
-    private final List<MovieItem> mItems = new ArrayList<MovieItem>();
+  //  private final List<MovieItem> mItems = new ArrayList<MovieItem>();
    // private final LayoutInflater mLayoutInflater;
 
 
-
-    @Override
-    public int getCount() {
-        return mItems.size();
-    }
-
-    @Override
-    public MovieItem getItem(int position) {
-        return mItems.get(position);
-    }
 
     @Override
     public long getItemId(int position) {
@@ -90,17 +77,6 @@ public class ImageAdapter extends CursorAdapter {
 
     }
 
-//    void clear(){
-//        mItems.clear();
-//    }
-//
-//    void add(ArrayList<MovieItem> movies){
-//
-//        for(MovieItem movie: movies){
-//            mItems.add(movie);
-//        }
-//
-//    }
 
 
 

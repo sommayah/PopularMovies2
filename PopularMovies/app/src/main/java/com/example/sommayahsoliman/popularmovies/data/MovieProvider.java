@@ -19,10 +19,11 @@ public class MovieProvider extends ContentProvider {
     private MovieDbHelper mOpenHelper;
 
     public static final int MOVIE = 100;
-    public static final int TRAILER_FOR_MOVIE = 101;
-    public static final int REVIEW_FOR_MOVIE = 102;
-    public static final int TRAILER = 300;
-    public static final int REVIEW = 400;
+    public static final int MOVIE_WITH_ID = 101;
+    public static final int TRAILER_FOR_MOVIE = 201;
+    public static final int REVIEW_FOR_MOVIE = 301;
+    public static final int TRAILER = 200;
+    public static final int REVIEW = 300;
 
     private static final SQLiteQueryBuilder sTrailersForMovieQueryBuilder;
     private static final SQLiteQueryBuilder sReviewsForMovieQueryBuilder;
@@ -103,6 +104,23 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
+    private Cursor getMovieById(Uri uri, String[] projection, String sortOrder){
+        String movie_id = MovieContract.MovieEntry.getMovieIdFromUri(uri);
+        String[] selectionArgs;
+        String selection;
+        selection = sMovieIdSelection;
+        selectionArgs = new String[]{movie_id};
+
+        return sReviewsForMovieQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+    }
+
 
 
     /*
@@ -120,6 +138,7 @@ public class MovieProvider extends ContentProvider {
         // 2) Use the addURI function to match each of the types.  Use the constants from
         // WeatherContract to help define the types to the UriMatcher.
         uriMatcher.addURI(authority,MovieContract.PATH_MOVIE , MOVIE);
+        uriMatcher.addURI(authority,MovieContract.PATH_MOVIE+ "/*", MOVIE_WITH_ID);
         uriMatcher.addURI(authority,MovieContract.PATH_TRAILER + "/*", TRAILER_FOR_MOVIE);
         uriMatcher.addURI(authority,MovieContract.PATH_REVIEW + "/*", REVIEW_FOR_MOVIE);
         uriMatcher.addURI(authority,MovieContract.PATH_TRAILER , TRAILER);
@@ -157,11 +176,13 @@ public class MovieProvider extends ContentProvider {
             case TRAILER_FOR_MOVIE:
                 return MovieContract.TrailerEntry.CONTENT_TYPE;
             case MOVIE:
-                return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
+                return MovieContract.MovieEntry.CONTENT_TYPE;
             case TRAILER:
                 return MovieContract.TrailerEntry.CONTENT_TYPE;
             case REVIEW:
                 return MovieContract.ReviewEntry.CONTENT_TYPE;
+            case MOVIE_WITH_ID:
+                return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -185,6 +206,11 @@ public class MovieProvider extends ContentProvider {
                 retCursor = getReviewsByMovieId(uri, projection, sortOrder);
                 break;
             }
+            case MOVIE_WITH_ID:{
+                retCursor = getReviewsByMovieId(uri, projection, sortOrder);
+                break;
+            }
+
 
             case MOVIE: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
