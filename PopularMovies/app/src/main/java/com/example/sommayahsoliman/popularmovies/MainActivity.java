@@ -63,38 +63,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
     }
 
 
-//    @Override
-//    public void onItemSelected(Uri dateUri) {
-//        if (mTwoPane == true) {
-//            Bundle args = new Bundle();
-//            args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
-//            DetailActivityFragment detailFragment = new DetailActivityFragment();
-//            detailFragment.setArguments(args);
-//            getSupportFragmentManager().beginTransaction()
-//                    .replace(R.id.movie_detail_container, detailFragment, DETAILFRAGMENT_TAG)
-//                    .commit();
-//
-//        } else {
-//            Intent intent = new Intent(this, DetailActivity.class)
-//                    .setData(dateUri);
-//            startActivity(intent);
-//        }
-//    }
 
-//    @Override
-//    public void onFinishLoading(Uri movieUri) {
-//        if (mTwoPane == true) {
-//            Bundle args = new Bundle();
-//            args.putParcelable(DetailActivityFragment.DETAIL_URI, movieUri);
-//            //args.putParcelable(DetailActivityFragment.TRAILER_URI, );
-//            //args.putParcelable(DetailActivityFragment.DETAIL_INTENT, intent);
-//            DetailActivityFragment detailFragment =(DetailActivityFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
-//            if ( null != detailFragment ) {
-//                detailFragment.updateUI(movieUri);
-//            }
-//
-//        }
-//    }
 
     @Override
     public void onItemSelected(Intent intent) {
@@ -109,8 +78,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
                     .commit();
 
         } else {
-            //  Intent intent = new Intent(this, DetailActivity.class)
-            //         .setData(dateUri);
             startActivity(intent);
         }
     }
@@ -119,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
     public void onFinishLoading(Intent intent) {
         if (mTwoPane == true) {
             Bundle args = new Bundle();
-            //  args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
             args.putParcelable(DetailActivityFragment.DETAIL_INTENT, intent);
             DetailActivityFragment detailFragment =(DetailActivityFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
             if ( null != detailFragment ) {

@@ -9,9 +9,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,10 +35,9 @@ import java.util.Set;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+public class MainActivityFragment extends Fragment{
     ArrayList<MovieItem> movieItems;
     ArrayList<Extras> extrasArray;
-    ImageCursorAdapter cursorAdapter;
     ImageAdapter adapter;
     Set<String> favoriteMovies;
     SharedPreferences.OnSharedPreferenceChangeListener listener;
@@ -73,19 +69,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     };
 
-    private static final String[] TRAILER_COLUMNS = {
-            MovieContract.TrailerEntry.TABLE_NAME + "." + MovieContract.TrailerEntry._ID,
-            MovieContract.TrailerEntry.COLUMN_MOVIE_KEY,
-            MovieContract.TrailerEntry.COLUMN_TRAILER_NAME,
-            MovieContract.TrailerEntry.COLUMN_TRAILER_SOURCE
-    };
 
-    private static final String[] REVIEW_COLUMNS = {
-            MovieContract.ReviewEntry.TABLE_NAME + "." + MovieContract.ReviewEntry._ID,
-            MovieContract.ReviewEntry.COLUMN_MOVIE_KEY,
-            MovieContract.ReviewEntry.COLUMN_REVIEW_AUTHOR,
-            MovieContract.ReviewEntry.COLUMN_REVIEW_BODY
-    };
 
     // These indices are tied to MOVIE_COLUMNS.  If MOVIE_COLUMNS changes, these
     // must change.
@@ -124,7 +108,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         if(savedInstanceState != null && savedInstanceState.containsKey("movies")) {
              movieItems = savedInstanceState.getParcelableArrayList("movies");
         }else{
-            //movieItems = new ArrayList<MovieItem>();
             updateMovies();
         }
         //to listen to setting changes and fetch new data when changed
@@ -134,14 +117,12 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     void onChangedSelection(){
         updateMovies();
-    //    getLoaderManager().restartLoader(MY_LOADER_ID, null, this);
     }
 
 
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    //    getLoaderManager().initLoader(MY_LOADER_ID, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -185,11 +166,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 //if the favorite is empty we don't want to show any movie on UI
                 movieItems = new ArrayList<MovieItem>();
                 if (favoriteMovies != null) {
-//                    for (Iterator<String> it = favoriteMovies.iterator(); it.hasNext(); ) {
-//                        String movie_id = it.next();
                         FetchFavoritesTask favoriteTask = new FetchFavoritesTask();
                         favoriteTask.execute();
-//                    }
                 }
             }else {
                 FetchMovieTask movieTask = new FetchMovieTask();
@@ -282,14 +260,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 movieItems.add(movieItem);
             }
 
-
-            for (String s : resultTitles) {
-                //  Log.v(LOG_TAG, "movie entry: " + s);
-            }
-            for (String s : resultPaths) {
-
-                // Log.v(LOG_TAG,"movie path: " + s);
-            }
             return movieItems;
 
         }
@@ -390,7 +360,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 adapter.add(movieList);
                 adapter.notifyDataSetChanged();
                 getExtrasInBackground();
-                //UpdateUiAfterLoading();
                 super.onPostExecute(movieList);
             }
         }
@@ -553,8 +522,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 extrasArray.add(extras);
                 if(extrasArray.size() == movieItems.size()) { //finished loading all extras
                     addExtrasToMovieItems(extrasArray);
+                    //fetched all information now update ui
                     UpdateUiAfterLoading();
-
                 }
                 super.onPostExecute(extras);
             }
@@ -694,47 +663,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         }
         return rootView;
     }
-
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        // This is called when a new Loader needs to be created.  This
-        // sample only has one Loader, so we don't care about the ID.
-        // First, pick the base URI to use depending on whether we are
-        // currently filtering.
-        String sort_by = Utility.getSortByCriteria(getActivity());
-        String sortOrder = getSortOrder(sort_by);
-        Uri movieUri = MovieContract.MovieEntry.CONTENT_URI;
-
-
-
-        // Now create and return a CursorLoader that will take care of
-        // creating a Cursor for the data being displayed.
-        Loader<Cursor> loader = new CursorLoader(getActivity(), movieUri,
-                MOVIE_COLUMNS, null, null,
-                MovieContract.MovieEntry.COLUMN_MOVIE_KEY + " ASC");
-
-        return loader;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-// old cursor once we return.)
-        cursorAdapter.swapCursor(data);
-        if (mPosition != GridView.INVALID_POSITION) {
-            mGridView.smoothScrollToPosition(mPosition);
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        cursorAdapter.swapCursor(null);
-    }
-
-
-
-
-
 
 
 

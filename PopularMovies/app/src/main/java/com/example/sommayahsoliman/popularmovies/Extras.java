@@ -13,8 +13,8 @@ public class Extras implements Parcelable{
         this.trailers = trailers;
         this.reviews = reviews;
     }
-    public int getTrailersNum(){return trailers.length;}
-    public int getReviewsNum(){return reviews.length;}
+    public int getTrailersNum(){return this.trailers.length;}
+    public int getReviewsNum(){return this.reviews.length;}
     public Trailer getTrailerAtIndex(int i){return trailers[i];}
     public Review getReviewAtIndex(int i){return reviews[i];}
 

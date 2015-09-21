@@ -11,12 +11,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.util.Log;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -32,7 +33,7 @@ import java.util.Set;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DetailActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+public class DetailActivityFragment extends Fragment{
 
     private final String IMAGE_SIZE = "w342";
     private final String RELEASE_DATE = "Release Date: ";
@@ -50,6 +51,9 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     private Intent mIntent;
     private boolean favorite;
     private double popularity;
+    private final String SHARE_HASHTAG = " #PopularMovies";
+    private ShareActionProvider mShareActionProvider;
+    String shareString;
 
     TextView mTextView;
     TextView mDateTextView;
@@ -62,29 +66,10 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     private MovieItem mMovieItem;
 
     static final String DETAIL_URI = "URI";
-    static final String TRAILER_URI ="TURI";
 
-    private static final int DETAIL_LOADER = 0;
-    private static final int TRAILER_LOADER = 1;
-    private static final int REVIEW_LOADER = 2;
+
     private static final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
-    private static final String[] DETAIL_COLUMNS = {
-            // In this case the id needs to be fully qualified with a table name, since
-            // the content provider joins the location & weather tables in the background
-            // (both have an _id column)
-            // On the one hand, that's annoying.  On the other, you can search the weather table
-            // using the location set by the user, which is only in the Location table.
-            // So the convenience is worth it.
-            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
-            MovieContract.MovieEntry.COLUMN_MOVIE_KEY,
-            MovieContract.MovieEntry.COLUMN_NAME,
-            MovieContract.MovieEntry.COLUMN_IMAGE_PATH,
-            MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
-            MovieContract.MovieEntry.COLUMN_OVERVIEW,
-            MovieContract.MovieEntry.COLUMN_VOTE,
-            MovieContract.MovieEntry.COLUMN_POPULARITY,
-            MovieContract.MovieEntry.COLUMN_FAVORITE
-    };
+
 
     // These indices are tied to MOVIE_COLUMNS.  If MOVIE_COLUMNS changes, these
     // must change.
@@ -98,7 +83,7 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     static final int COL_MOVIE_FAVORITE = 8;
 
     public DetailActivityFragment() {
-        setHasOptionsMenu(false);
+        setHasOptionsMenu(true);
     }
 
     public static DetailActivityFragment newInstance(int index){
@@ -122,6 +107,39 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
         }
 
 
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        //super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.detailfragmentmenu, menu);
+        // Retrieve the share menu item
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+
+        // Get the provider and hold onto it to set/change the share intent.
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+
+        // If onLoadFinished happens before this, we can go ahead and set the share intent now.
+        if (extras != null) {
+            mShareActionProvider.setShareIntent(createShareForecastIntent());
+        }
+    }
+
+    private Intent createShareForecastIntent() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        shareIntent.setType("text/plain");
+        int num = extras.getTrailersNum();
+        if(num >0) {
+            String trailersource = extras.getTrailerAtIndex(0).getSource();
+            shareString = "http://www.youtube.com/watch?v="+ trailersource;
+        }
+        else{
+           shareString = "no trailer found";
+        }
+
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareString + SHARE_HASHTAG);
+        return shareIntent;
     }
 
     @Override
@@ -159,20 +177,8 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
         return rootView;
     }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        getLoaderManager().initLoader(DETAIL_LOADER, null, this);
-       // getLoaderManager().initLoader(TRAILER_LOADER,null, this);
-        super.onActivityCreated(savedInstanceState);
-    }
 
-    void updateUI(Uri data){
-        mUri = data;
-        if (null != mUri) {
-            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
-        }
 
-    }
 
     void updateUI(Intent intent){ //incase of vote average and popularity
         if(intent != null && intent.hasExtra("title")){
@@ -214,58 +220,7 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
         mIntent = intent;
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.v(LOG_TAG, "In onCreateLoader");
 
-                if (null != mUri) {
-                    // Now create and return a CursorLoader that will take care of
-                    // creating a Cursor for the data being displayed.
-                    return new CursorLoader(
-                            getActivity(),
-                            mUri,
-                            DETAIL_COLUMNS,
-                            null,
-                            null,
-                            null
-                    );
-                }
-
-        return null;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data != null && data.moveToFirst()) {
-            // Read weather condition ID from cursor
-            movie_id = data.getString(COL_MOVIE_KEY);
-            name = data.getString(COL_MOVIE_NAME);
-            path = data.getString(COL_MOVIE_IMAGE_PATH);
-            release_date = data.getString(COL_MOVIE_RELEASE_DATE);
-            vote = data.getDouble(COL_MOVIE_VOTE);
-            overview = data.getString(COL_MOVIE_OVERVIEW);
-            int dataFavorite = data.getInt(COL_MOVIE_FAVORITE);
-            favorite = data.getInt(COL_MOVIE_FAVORITE)>0;
-            mTextView.setText(name);
-            mDateTextView.setText(RELEASE_DATE+release_date);
-            mVoteTextView.setText(VOTE + String.valueOf(vote));
-            mOverviewTextView.setText(overview);
-            // Use placeholder Image
-            if(favorite == true){
-                mFavorite_btn.setBackgroundResource(R.drawable.abc_btn_rating_star_on_mtrl_alpha);
-            }else{
-                mFavorite_btn.setBackgroundResource(R.drawable.abc_btn_rating_star_off_mtrl_alpha);
-            }
-            Utility.setImageResource(getActivity(),mImageView,path);
-
-
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-
-    }
 
 
 
