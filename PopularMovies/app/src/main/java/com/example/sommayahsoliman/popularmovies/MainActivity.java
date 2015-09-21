@@ -1,16 +1,10 @@
 package com.example.sommayahsoliman.popularmovies;
 
-import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import com.example.sommayahsoliman.popularmovies.data.MovieContract;
-import com.example.sommayahsoliman.popularmovies.data.MovieDbHelper;
 
 
 public class MainActivity extends AppCompatActivity implements MainActivityFragment.Callback {
@@ -69,11 +63,45 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
     }
 
 
+//    @Override
+//    public void onItemSelected(Uri dateUri) {
+//        if (mTwoPane == true) {
+//            Bundle args = new Bundle();
+//            args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
+//            DetailActivityFragment detailFragment = new DetailActivityFragment();
+//            detailFragment.setArguments(args);
+//            getSupportFragmentManager().beginTransaction()
+//                    .replace(R.id.movie_detail_container, detailFragment, DETAILFRAGMENT_TAG)
+//                    .commit();
+//
+//        } else {
+//            Intent intent = new Intent(this, DetailActivity.class)
+//                    .setData(dateUri);
+//            startActivity(intent);
+//        }
+//    }
+
+//    @Override
+//    public void onFinishLoading(Uri movieUri) {
+//        if (mTwoPane == true) {
+//            Bundle args = new Bundle();
+//            args.putParcelable(DetailActivityFragment.DETAIL_URI, movieUri);
+//            //args.putParcelable(DetailActivityFragment.TRAILER_URI, );
+//            //args.putParcelable(DetailActivityFragment.DETAIL_INTENT, intent);
+//            DetailActivityFragment detailFragment =(DetailActivityFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+//            if ( null != detailFragment ) {
+//                detailFragment.updateUI(movieUri);
+//            }
+//
+//        }
+//    }
+
     @Override
-    public void onItemSelected(Uri dateUri) {
+    public void onItemSelected(Intent intent) {
         if (mTwoPane == true) {
             Bundle args = new Bundle();
-            args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
+            //  args.putParcelable(DetailActivityFragment.DETAIL_URI, dateUri);
+            args.putParcelable(DetailActivityFragment.DETAIL_INTENT,intent);
             DetailActivityFragment detailFragment = new DetailActivityFragment();
             detailFragment.setArguments(args);
             getSupportFragmentManager().beginTransaction()
@@ -81,8 +109,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
                     .commit();
 
         } else {
-            Intent intent = new Intent(this, DetailActivity.class)
-                    .setData(dateUri);
+            //  Intent intent = new Intent(this, DetailActivity.class)
+            //         .setData(dateUri);
             startActivity(intent);
         }
     }
@@ -100,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
 
         }
     }
+
 
 
 }

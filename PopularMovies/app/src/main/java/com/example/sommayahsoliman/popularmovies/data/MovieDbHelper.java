@@ -11,7 +11,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
     private static final int DATABASE_VERSION = 8;
 
-    public static final String DATABASE_NAME = "movies.db";
+    public static final String DATABASE_NAME = "moviedb.db";
 
     public MovieDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -50,22 +50,22 @@ public class MovieDbHelper extends SQLiteOpenHelper {
 
         final String SQL_CREATE_TRAILER_TABLE = "CREATE TABLE " + MovieContract.TrailerEntry.TABLE_NAME + " (" +
                 MovieContract.TrailerEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + " TEXT UNIQUE NOT NULL, "+
+                MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + " TEXT NOT NULL, "+
                 MovieContract.TrailerEntry.COLUMN_TRAILER_NAME + " TEXT NOT NULL, " +
                 MovieContract.TrailerEntry.COLUMN_TRAILER_SOURCE + " TEXT NOT NULL, "+
                 // Set up the location column as a foreign key to location table.
-                " FOREIGN KEY (" + MovieContract.MovieEntry.COLUMN_MOVIE_KEY + ") REFERENCES " +
+                " FOREIGN KEY (" + MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + ") REFERENCES " +
                 MovieContract.MovieEntry.TABLE_NAME + " (" + MovieContract.MovieEntry._ID+ ") " +
                 "); ";
         sqLiteDatabase.execSQL(SQL_CREATE_TRAILER_TABLE);
 
         final String SQL_CREATE_REVIEW_TABLE = "CREATE TABLE " + MovieContract.ReviewEntry.TABLE_NAME + " (" +
                 MovieContract.ReviewEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                MovieContract.ReviewEntry.COLUMN_MOVIE_KEY + " TEXT UNIQUE NOT NULL, "+
+                MovieContract.ReviewEntry.COLUMN_MOVIE_KEY + " TEXT NOT NULL, "+
                 MovieContract.ReviewEntry.COLUMN_REVIEW_AUTHOR + " TEXT NOT NULL, " +
                 MovieContract.ReviewEntry.COLUMN_REVIEW_BODY + " TEXT NOT NULL, "+
                 // Set up the location column as a foreign key to location table.
-                " FOREIGN KEY (" + MovieContract.MovieEntry.COLUMN_MOVIE_KEY + ") REFERENCES " +
+                " FOREIGN KEY (" + MovieContract.ReviewEntry.COLUMN_MOVIE_KEY + ") REFERENCES " +
                 MovieContract.MovieEntry.TABLE_NAME + " (" + MovieContract.MovieEntry._ID + ") "+
                 "); ";
         sqLiteDatabase.execSQL(SQL_CREATE_REVIEW_TABLE);

@@ -49,6 +49,10 @@ public class MovieContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        public static Uri buildTrailerWithMovieId(String movie_id){
+            return CONTENT_URI.buildUpon().appendPath(movie_id).build();
+        }
+
 
     }
 
@@ -73,6 +77,10 @@ public class MovieContract {
 
         public static Uri buildReviewUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static Uri buildReviewWithMovieId(String movie_id){
+            return CONTENT_URI.buildUpon().appendPath(movie_id).build();
         }
 
 
@@ -112,6 +120,8 @@ public class MovieContract {
         public static Uri buildMovieWithIdUri(String movie_id){
             return CONTENT_URI.buildUpon().appendPath(movie_id).build();
         }
+
+
 
 
      /*   public static Uri buildWeatherLocation(String locationSetting) {

@@ -27,6 +27,7 @@ public class MovieProvider extends ContentProvider {
 
     private static final SQLiteQueryBuilder sTrailersForMovieQueryBuilder;
     private static final SQLiteQueryBuilder sReviewsForMovieQueryBuilder;
+    private static final SQLiteQueryBuilder sMoviesForMovieQueryBuilder;
 
     static{
         sTrailersForMovieQueryBuilder = new SQLiteQueryBuilder();
@@ -56,6 +57,16 @@ public class MovieProvider extends ContentProvider {
                         "." + MovieContract.ReviewEntry.COLUMN_MOVIE_KEY +
                         " = " + MovieContract.MovieEntry.TABLE_NAME +
                         "." + MovieContract.MovieEntry._ID);
+
+    }
+    static{
+        sMoviesForMovieQueryBuilder = new SQLiteQueryBuilder();
+
+
+        //This is an inner join which looks like
+        //trailer INNER JOIN movie ON trailer.movie_id = movie._id
+        sMoviesForMovieQueryBuilder.setTables(
+                MovieContract.MovieEntry.TABLE_NAME);
 
     }
 
@@ -111,7 +122,8 @@ public class MovieProvider extends ContentProvider {
         selection = sMovieIdSelection;
         selectionArgs = new String[]{movie_id};
 
-        return sReviewsForMovieQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+        return mOpenHelper.getReadableDatabase().query(
+                MovieContract.MovieEntry.TABLE_NAME,
                 projection,
                 selection,
                 selectionArgs,
@@ -207,9 +219,10 @@ public class MovieProvider extends ContentProvider {
                 break;
             }
             case MOVIE_WITH_ID:{
-                retCursor = getReviewsByMovieId(uri, projection, sortOrder);
+                retCursor = getMovieById(uri, projection, sortOrder);
                 break;
             }
+
 
 
             case MOVIE: {
