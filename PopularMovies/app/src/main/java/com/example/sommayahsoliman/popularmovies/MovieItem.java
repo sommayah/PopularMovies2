@@ -54,6 +54,7 @@ public class MovieItem implements Parcelable{
         vote = in.readDouble();
         overView=in.readString();
         popularity=in.readDouble();
+        favorite = in.readInt()>0;
         extra = in.readParcelable(Extras.class.getClassLoader());
 
     }
@@ -72,6 +73,7 @@ public class MovieItem implements Parcelable{
         dest.writeDouble(vote);
         dest.writeString(overView);
         dest.writeDouble(popularity);
+        dest.writeInt(favorite?1:0);
         dest.writeParcelable(extra,0);
 
 

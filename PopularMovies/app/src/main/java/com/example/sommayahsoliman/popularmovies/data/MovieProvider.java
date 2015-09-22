@@ -75,6 +75,10 @@ public class MovieProvider extends ContentProvider {
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_MOVIE_KEY + " = ? ";
 
+    private static final String sTrailerIdSelection =
+            MovieContract.TrailerEntry.TABLE_NAME+
+                    "." + MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + " = ? ";
+
     //get all trailers for a movie with movie_id
     private Cursor getTrailerByMovieId(Uri uri, String[] projection, String sortOrder) {
         String movie_id = MovieContract.MovieEntry.getMovieIdFromUri(uri);
@@ -82,7 +86,7 @@ public class MovieProvider extends ContentProvider {
 
         String[] selectionArgs;
         String selection;
-        selection = sMovieIdSelection;
+        selection = sTrailerIdSelection;
         selectionArgs = new String[]{movie_id};
 
         return sTrailersForMovieQueryBuilder.query(mOpenHelper.getReadableDatabase(),
@@ -238,6 +242,31 @@ public class MovieProvider extends ContentProvider {
                 break;
             }
 
+            case TRAILER:{
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MovieContract.TrailerEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
+
+            case REVIEW:{
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MovieContract.ReviewEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
 
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);

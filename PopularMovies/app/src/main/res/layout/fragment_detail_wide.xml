@@ -115,7 +115,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:id="@+id/trailers_layouts"></LinearLayout>
+            android:id="@+id/extras_layouts"></LinearLayout>
 
     </LinearLayout>
 
