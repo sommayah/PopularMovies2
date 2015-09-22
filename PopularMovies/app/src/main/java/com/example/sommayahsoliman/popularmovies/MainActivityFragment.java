@@ -69,6 +69,20 @@ public class MainActivityFragment extends Fragment{
 
     };
 
+    private static final String[] TRAILER_COLUMNS = {
+            MovieContract.TrailerEntry.TABLE_NAME+ "." + MovieContract.TrailerEntry._ID,
+            MovieContract.TrailerEntry.COLUMN_MOVIE_KEY,
+            MovieContract.TrailerEntry.COLUMN_TRAILER_NAME,
+            MovieContract.TrailerEntry.COLUMN_TRAILER_SOURCE
+    };
+
+    private static final String[] REVIEW_COLUMNS = {
+            MovieContract.ReviewEntry.TABLE_NAME+ "." + MovieContract.ReviewEntry._ID,
+            MovieContract.ReviewEntry.COLUMN_MOVIE_KEY,
+            MovieContract.ReviewEntry.COLUMN_REVIEW_AUTHOR,
+            MovieContract.ReviewEntry.COLUMN_REVIEW_BODY
+    };
+
 
 
     // These indices are tied to MOVIE_COLUMNS.  If MOVIE_COLUMNS changes, these
@@ -82,11 +96,11 @@ public class MainActivityFragment extends Fragment{
     static final int COL_MOVIE_POPULARITY = 7;
     static final int COL_MOVIE_FAVORITE = 8;
 
-    static final int COL_TRAILER_NAME = 1;
-    static final int COL_TRAILER_SOURCE = 2;
+    static final int COL_TRAILER_NAME = 2;
+    static final int COL_TRAILER_SOURCE = 3;
 
-    static final int COL_REVIEW_NAME = 1;
-    static final int COL_REVIEW_BODY = 2;
+    static final int COL_REVIEW_NAME = 2;
+    static final int COL_REVIEW_BODY = 3;
 
 
     @Override
@@ -155,21 +169,21 @@ public class MainActivityFragment extends Fragment{
 
         sort_by = Utility.getSortByCriteria(getActivity());
         favoriteMovies = Utility.getFavoriteMovies(getActivity());
+        if (sort_by.equals("favorite")) { //in this case we fetch movies by id's we have in favorite array
+            //if the favorite is empty we don't want to show any movie on UI
+            movieItems = new ArrayList<MovieItem>();
+            if (favoriteMovies != null) {
+                FetchFavoritesTask favoriteTask = new FetchFavoritesTask();
+                favoriteTask.execute();
+            }
 
+        } else {
 
-        if(OnlineUtils.isOnline(getActivity()) == false){
-            Toast.makeText(getActivity(), "no internet connection",
-                    Toast.LENGTH_SHORT).show();
-        }else {
-            if(sort_by.equals("favorite"))
-            { //in this case we fetch movies by id's we have in favorite array
-                //if the favorite is empty we don't want to show any movie on UI
-                movieItems = new ArrayList<MovieItem>();
-                if (favoriteMovies != null) {
-                        FetchFavoritesTask favoriteTask = new FetchFavoritesTask();
-                        favoriteTask.execute();
-                }
-            }else {
+            if (OnlineUtils.isOnline(getActivity()) == false) {
+                Toast.makeText(getActivity(), "no internet connection",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+
                 FetchMovieTask movieTask = new FetchMovieTask();
                 movieTask.execute(sort_by);
             }
@@ -186,6 +200,14 @@ public class MainActivityFragment extends Fragment{
             mGridView.smoothScrollToPosition(mPosition);
         }
     }
+
+    public void cleardetailView(){
+      //  ss:do something here to clear detail view
+        Toast.makeText(getActivity(), "no favorite movies,I have to clear detail view",
+                Toast.LENGTH_SHORT).show();
+    }
+
+
 
     Intent updateDetailIntent(int position){
         Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
@@ -578,26 +600,27 @@ public class MainActivityFragment extends Fragment{
 
         private Extras getExtrasFromdb(String movie_id) {
             long movieId;
-            Uri trailerUri = MovieContract.TrailerEntry.buildTrailerWithMovieId(movie_id);
+            Uri trailerUri = MovieContract.TrailerEntry.CONTENT_URI;
             Cursor cur = getActivity().getContentResolver().query(trailerUri,
-                    null,
+                    TRAILER_COLUMNS,
                     MovieContract.TrailerEntry.COLUMN_MOVIE_KEY + " = ?",
                     new String[]{movie_id}, null);
+
             Trailer[] trailers = new Trailer[cur.getCount()];
             int i=0;
             while (cur.moveToNext()) {
-                trailers[i] = new Trailer(cur.getColumnName(COL_TRAILER_NAME),cur.getColumnName(COL_TRAILER_SOURCE));
+                trailers[i] = new Trailer(cur.getString(COL_TRAILER_NAME),cur.getString(COL_TRAILER_SOURCE));
                 i++;
             }
-            Uri reviewUri = MovieContract.ReviewEntry.buildReviewWithMovieId(movie_id);
+            Uri reviewUri = MovieContract.ReviewEntry.CONTENT_URI;
             cur = getActivity().getContentResolver().query(reviewUri,
-                    null,
+                    REVIEW_COLUMNS,
                     MovieContract.ReviewEntry.COLUMN_MOVIE_KEY + " = ?",
                     new String[]{movie_id}, null);
             Review[] reviews = new Review[cur.getCount()];
             int j=0;
             while (cur.moveToNext()) {
-                reviews[j] = new Review(cur.getColumnName(COL_REVIEW_NAME),cur.getColumnName(COL_REVIEW_BODY));
+                reviews[j] = new Review(cur.getString(COL_REVIEW_NAME),cur.getString(COL_REVIEW_BODY));
                 j++;
             }
             return new Extras(trailers,reviews);
@@ -610,12 +633,14 @@ public class MainActivityFragment extends Fragment{
 
         @Override
         protected void onPostExecute(ArrayList<MovieItem> movieList) {
-            if (movieList.size()>0) {
+            if (movieList !=null) {
                 adapter.clear();
                 adapter.add(movieList);
                 adapter.notifyDataSetChanged();
-                getExtrasInBackground();
-                UpdateUiAfterLoading();
+                if(movieList.size() > 0) //in case list is empty we have to clear detail view
+                    UpdateUiAfterLoading();
+                else
+                    cleardetailView();
                 super.onPostExecute(movieList);
             }
             super.onPostExecute(movieList);

@@ -47,13 +47,15 @@ public class DetailActivityFragment extends Fragment{
     private String overview;
     private String movie_id;
     private Extras extras; //this includes trailers and reviews
-    public LinearLayout mLayout;
+    public LinearLayout mLayout;  ///layout that contains trailers and reviews
     private Intent mIntent;
     private boolean favorite;
     private double popularity;
     private final String SHARE_HASHTAG = " #PopularMovies";
     private ShareActionProvider mShareActionProvider;
     String shareString;
+
+
 
     TextView mTextView;
     TextView mDateTextView;
@@ -64,6 +66,7 @@ public class DetailActivityFragment extends Fragment{
     private Uri mUri;
     private Uri mTUri;
     private MovieItem mMovieItem;
+
 
     static final String DETAIL_URI = "URI";
 
@@ -106,8 +109,8 @@ public class DetailActivityFragment extends Fragment{
             mIntent = savedInstanceState.getParcelable(DETAIL_INTENT);
         }
 
-
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -159,7 +162,7 @@ public class DetailActivityFragment extends Fragment{
             mUri = arguments.getParcelable(DetailActivityFragment.DETAIL_URI); //incase of favorites
             mIntent = arguments.getParcelable(DETAIL_INTENT); //in case of popularity or vote average
         }
-        mLayout = (LinearLayout)rootView.findViewById(R.id.outerLayout);
+        mLayout = (LinearLayout)rootView.findViewById(R.id.extras_layouts);
         mTextView = (TextView)rootView.findViewById(R.id.textViewTitle);
         mDateTextView = (TextView)rootView.findViewById(R.id.textViewDate);
         mVoteTextView = (TextView)rootView.findViewById(R.id.textViewVote);
@@ -181,6 +184,7 @@ public class DetailActivityFragment extends Fragment{
 
 
     void updateUI(Intent intent){ //incase of vote average and popularity
+        mLayout.removeAllViews();
         if(intent != null && intent.hasExtra("title")){
             name = intent.getStringExtra("title");
             path = intent.getStringExtra("path");
@@ -192,7 +196,7 @@ public class DetailActivityFragment extends Fragment{
             favorite = intent.getBooleanExtra("favorite", false);
             popularity = intent.getDoubleExtra("popularity",0);
             mTextView.setText(name);
-            mDateTextView.setText(RELEASE_DATE+release_date);
+            mDateTextView.setText(RELEASE_DATE + release_date);
             mVoteTextView.setText(VOTE + String.valueOf(vote));
             mOverviewTextView.setText(overview);
             if(favorite == true){
@@ -201,17 +205,8 @@ public class DetailActivityFragment extends Fragment{
                 mFavorite_btn.setBackgroundResource(R.drawable.abc_btn_rating_star_off_mtrl_alpha);
             }
 
-            Utility.setImageResource(getActivity(),mImageView,path);
-
-            if(extras ==null) { //fetch it if it is not saved from before
-               /* if (OnlineUtils.isOnline(getActivity()) == false) {
-                    Toast.makeText(getActivity(), "no internet connection",
-                            Toast.LENGTH_SHORT).show();
-                } else {
-                    new FetchExtrasTask().execute(movie_id);
-
-                }*/
-            }else{
+            Utility.setImageResource(getActivity(), mImageView, path);
+            if (extras != null) {
                 addTrailers(extras);
                 addReviews(extras);
             }
@@ -287,13 +282,15 @@ public class DetailActivityFragment extends Fragment{
             movieId = ContentUris.parseId(uri);
         }
         //addtrailer and reviews
-        for(int i=0; i<extra.getTrailersNum(); i++){
-            Trailer t = extra.getTrailerAtIndex(i);
-            Utility.addTrailer(movie_id,t.getTitle(),t.getSource(),getActivity());
-        }
-        for(int i=0; i<extra.getReviewsNum(); i++){
-            Review r = extra.getReviewAtIndex(i);
-            Utility.addReview(movie_id,r.getAuthor(),r.getBody(),getActivity());
+        if(extra != null) {
+            for (int i = 0; i < extra.getTrailersNum(); i++) {
+                Trailer t = extra.getTrailerAtIndex(i);
+                Utility.addTrailer(movie_id, t.getTitle(), t.getSource(), getActivity());
+            }
+            for (int i = 0; i < extra.getReviewsNum(); i++) {
+                Review r = extra.getReviewAtIndex(i);
+                Utility.addReview(movie_id, r.getAuthor(), r.getBody(), getActivity());
+            }
         }
 
     }
@@ -369,8 +366,8 @@ public class DetailActivityFragment extends Fragment{
 
             TextView reviewBody = new TextView(getActivity());
             reviewBody.setText(extra.getReviewAtIndex(i).getBody());
-           // reviewBody.setTextAppearance(getActivity(), android.R.style.TextAppearance_DeviceDefault_Medium);
-           // reviewBody.setTextColor(Color.DKGRAY);
+            // reviewBody.setTextAppearance(getActivity(), android.R.style.TextAppearance_DeviceDefault_Medium);
+            // reviewBody.setTextColor(Color.DKGRAY);
             reviewBody.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -385,6 +382,7 @@ public class DetailActivityFragment extends Fragment{
         }
 
     }
+
     public void watchYoutubeVideo(String id){
         try{
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
@@ -396,6 +394,16 @@ public class DetailActivityFragment extends Fragment{
         }
     }
 
+    public void addLineToLayout(View v){
+        v.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1
+        ));
+        v.setBackgroundColor(Color.parseColor("#B3B3B3"));
+        v.setVisibility(View.GONE);
+        mLayout.addView(v);
+
+    }
     public void addLine(){
         View v = new View(getActivity());
         v.setLayoutParams(new LinearLayout.LayoutParams(
